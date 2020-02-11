@@ -16,7 +16,6 @@ websocket_init(State = #{id := ClientID}) ->
   %% while still within websocket_init (so these messages are seen first by the client)
   broadcaster:register_self(ClientID),
   broadcaster:send_all(["NEW,", ClientID]),
-  broadcaster:request_introductions(),
   {reply, {text, [<<"YOUR_ID,">>, ClientID]}, State}.
 
 websocket_handle({text, Msg}, State = #{id := ClientID}) ->
@@ -43,16 +42,6 @@ websocket_handle(_Frame, State) ->
 
 websocket_info({send, Msg}, State) ->
   {reply, {text, Msg}, State};
-websocket_info({introduce, Target, Ref}, State = #{mouseDown := MouseDown, name:= Name, id := ClientID, mouseCoords := Coords}) ->
-  Target ! {send, [<<"NEW,">>, ClientID]},
-  Target ! {send, [<<"M_MOV,">>, ClientID, $,, Coords]},
-  Target ! {send, [<<"NAME,">>, ClientID, $,, Name]},
-  case MouseDown of
-    true -> Target ! {send, [<<"M_DOWN,">>, ClientID]};
-    false -> ok
-  end,
-  broadcaster ! {ok, Ref},
-  {ok, State};
 websocket_info(Msg, State) ->
   io:format("Websocket: OOB message ~p~n", [Msg]),
   {ok, State}.

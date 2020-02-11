@@ -4,35 +4,18 @@
 
 init(_) ->
   register(?MODULE, self()),
-  {ok, dict:new()}.
+  {ok, #{clients => dict:new(), history => queue:new()}}.
 
-handle_call({register, ClientID}, {From, _Tag}, ClientDict) ->
-  NewDict = dict:store(ClientID, From, ClientDict),
-  {reply, ok, NewDict};
-handle_call(introduce, {From, _Tag}, ClientDict) ->
-  F = fun(_ID, ClientPID) -> 
-    if
-      ClientPID == From ->
-        %% Don't attempt to 'introduce' self to oneself -> causes issues!
-        ok;
-      ClientPID /= From ->
-        Ref = make_ref(),
-        ClientPID ! {introduce, From, Ref},
-        receive 
-          {ok, Ref} -> ok
-        after 500 ->
-          timeout
-        end
-    end
-  end,
-  dict:map(F, ClientDict),
-  {reply, ok, ClientDict}.
+handle_call({register, ClientID}, {From, _Tag}, State = #{clients := Clients, history := History}) ->
+  NewDict = dict:store(ClientID, From, Clients),
+  [From ! {send, Msg} || Msg <- queue:to_list(History)],
+  {reply, ok, State#{clients => NewDict}}.
 
-handle_cast({send_all, Msg}, ClientDict) ->
-  dict:map(fun(_ID, ClientPID) -> ClientPID ! {send, Msg} end, ClientDict),
-  {noreply, ClientDict};
-handle_cast({deregister, ClientID}, ClientDict) ->
-  {noreply, dict:erase(ClientID, ClientDict)}.
+handle_cast({send_all, Msg}, #{clients := Clients, history := History}) ->
+  dict:map(fun(_ID, ClientPID) -> ClientPID ! {send, Msg} end, Clients),
+  {noreply, #{clients => Clients, history => queue:snoc(History, Msg)}};
+handle_cast({deregister, ClientID}, State = #{clients := ClientDict}) ->
+  {noreply, State#{clients => dict:erase(ClientID, ClientDict)}}.
 
 %% Public API
 
