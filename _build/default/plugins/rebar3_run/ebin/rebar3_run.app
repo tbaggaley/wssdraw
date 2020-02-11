@@ -1,0 +1,11 @@
+{application,rebar3_run,
+             [{description,"A rebar plugin"},
+              {vsn,"0.2.0"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {env,[]},
+              {modules,[rebar3_run]},
+              {contributors,["Tristan Sloughter"]},
+              {licenses,["MIT"]},
+              {links,[{"Github",
+                       "https://github.com/tsloughter/rebar3_run"}]}]}.
