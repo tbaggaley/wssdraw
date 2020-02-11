@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="tom@bfjd.uk">
+    <title>Multi-user websocket demo: drawing</title>
+    <style>
+        body { text-align: center; max-width: 1200px; margin: 0 auto; }
+        canvas { border: 2px solid black; margin: 1rem }
+        #log { height: 30px; background: #eee; overflow-y: scroll; width: 100%; padding: 2rem; font-family: monospace; margin: 1rem; }
+
+        #canvas_stack { display: block; position: relative; width: 100%; }
+        canvas { position: absolute; top: 0; left: 0; }
+        #canvas { z-index: 0; }
+        #overlay { z-index: 1; }
+    </style>
+    <script src="ws_client_draw.js" defer> </script>
+</head>
+<body class="container">
+    <h1>Muli-user websocket demo: drawing</h1>
+    <section id="log"> Initialising... </section>
+    <div id="stage">
+        <button id="btnPen">Pen</button>
+        <button id="btnEraser">Eraser</button>
+        <input id="brushColor" type="color">
+        <input id="brushSize" type="range" min="1" max="20">
+        <div id="canvas_stack">
+            <canvas id="canvas" width="800" height="500"> </canvas>
+            <canvas id="overlay" width="800" height="500"> </canvas>
+        </div>
+    </div>
+</body>
+</html>
