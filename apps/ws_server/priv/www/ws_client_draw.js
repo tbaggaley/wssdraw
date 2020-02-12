@@ -115,7 +115,6 @@ function init() {
 
             case "NAME":
                 const [newName] = rest;
-                console.log(clientID);
                 log(`${newName} has joined the session`);
                 clients[clientID].name = newName;
                 break;
@@ -140,6 +139,14 @@ function init() {
     overlay.onmousedown = () => { sock.send("M_DOWN"); };
     overlay.onmouseup = () => { sock.send("M_UP"); };
     overlay.onmousemove = ({offsetX, offsetY}) => { sock.send(`M_MOV,${offsetX},${offsetY}`); };
+
+    document.getElementById("brushColor").onchange = function() { 
+        sock.send(`COLOR,${this.value}`);
+    };
+
+    document.getElementById("brushSize").onchange = function() {
+        sock.send(`SIZE,${this.value}`);
+    };
 
     overlayCtx.font = "18px monospace";
     drawLoop();
