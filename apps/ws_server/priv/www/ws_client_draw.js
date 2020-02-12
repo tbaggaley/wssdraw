@@ -5,6 +5,7 @@ const overlayCtx = overlay.getContext("2d");
 
 const clients = {};
 var myID = '';
+var logScrolling = true;
 
 function log() {
     const logElem = document.getElementById("log");
@@ -20,26 +21,11 @@ function log() {
         }
 
         logElem.appendChild(appendElem);
-        logElem.scrollTo({top: 200000, behavior: "smooth"});
+
+        if(logScrolling) {
+            logElem.scrollTo({top: 200000, behavior: "smooth"});
+        }
     }
-}
-
-var g_messageRef = 0;
-async function server_call(websocket, text) {
-    const requestRef = g_messageRef++;
-    websocket.send(`${requestRef},${text}`);
-    return new Promise((resolve, reject) => {
-        // Give the reply up to 1s, otherwise reject promise (server dead?)
-        const rejectTimer = setTimeout(reject, 1000);
-
-        websocket.addEventListener("message", ({data}) => {
-            [replyRef, ...rest] = data.split(",");
-            if(replyRef == requestRef) {
-                clearTimeout(rejectTimer);
-                resolve(rest.join(","));
-            }
-        });
-    });
 }
 
 function init() {
@@ -67,6 +53,7 @@ function init() {
                 nameInput.disabled = true;
                 submit.disabled = true;
 
+                logScrolling = true;
                 sock.send(`NAME,${playername}`);
 
                 document.getElementById("stage").style.display = "unset";
@@ -74,6 +61,7 @@ function init() {
         });
 
         log(label, nameInput, submit);
+        logScrolling = false;
     };
 
     sock.onmessage = ({data}) => { 

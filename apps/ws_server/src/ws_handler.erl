@@ -49,5 +49,5 @@ websocket_info(Msg, State) ->
 
 terminate(_Reason, _Req, #{id := ClientID}) ->
   broadcaster:deregister_self(ClientID),
-  broadcaster:send_all([<<"DISCONNECT,">>, ClientID]),
+  broadcaster:send_all([<<"DISCONNECT,">>, ClientID], #{log => true}),
   ok.
