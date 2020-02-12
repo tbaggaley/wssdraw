@@ -18,7 +18,7 @@ websocket_init(State = #{id := ClientID}) ->
   broadcaster:send_all(["NEW,", ClientID], #{log => true}),
   {reply, {text, [<<"YOUR_ID,">>, ClientID]}, State}.
 
-websocket_handle({text, Msg}, State = #{id := ClientID, mouseDown := MouseDown}) ->
+websocket_handle({text, Msg}, State = #{id := ClientID, mouseDown := MouseDown, mouseCoords := MouseCoords}) ->
   NewState = case binary_to_list(Msg) of
     "M_MOV," ++ Coords -> 
       %% Only add events to history if actively drawing, i.e. mouse is depressed
@@ -28,6 +28,7 @@ websocket_handle({text, Msg}, State = #{id := ClientID, mouseDown := MouseDown})
       broadcaster:send_all([<<"M_UP,">>, ClientID], #{log => true}),
       State#{mouseDown => false};
     "M_DOWN" ->
+      broadcaster:send_all([<<"M_MOV,">>, ClientID, $,, MouseCoords]),
       broadcaster:send_all([<<"M_DOWN,">>, ClientID], #{log => true}),
       State#{mouseDown => true};
     "SIZE," ++ Size ->
