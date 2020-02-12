@@ -109,11 +109,11 @@ function init() {
                 break;
 
             case "COLOR":
-                clients[clientID].color = rest;
+                clients[clientID].brush.color = rest;
                 break;
 
             case "SIZE":
-                clients[clientID].thickness = rest;
+                clients[clientID].brush.thickness = rest;
                 break;
 
             case "DISCONNECT":
