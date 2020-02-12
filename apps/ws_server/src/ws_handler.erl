@@ -38,7 +38,8 @@ websocket_handle({text, Msg}, State = #{id := ClientID, mouseDown := MouseDown})
       State
   end, 
   {ok, NewState};
-websocket_handle(_Frame, State) ->
+websocket_handle(Frame, State) ->
+  io:format("websocket_handle: received oob msg: ~p~n", [Frame]),
   {ok, State}.
 
 websocket_info({send, Msg}, State) ->
