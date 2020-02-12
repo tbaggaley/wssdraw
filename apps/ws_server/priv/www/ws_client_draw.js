@@ -108,6 +108,14 @@ function init() {
                 clients[clientID].mouse.down = false;
                 break;
 
+            case "COLOR":
+                clients[clientID].color = rest;
+                break;
+
+            case "SIZE":
+                clients[clientID].thickness = rest;
+                break;
+
             case "DISCONNECT":
                 log(`${clients[clientID].name} disconnected.`);
                 delete clients[clientID];
