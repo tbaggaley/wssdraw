@@ -15,22 +15,23 @@ websocket_init(State = #{id := ClientID}) ->
   %% So we need all other websockets to introduce themselves
   %% while still within websocket_init (so these messages are seen first by the client)
   broadcaster:register_self(ClientID),
-  broadcaster:send_all(["NEW,", ClientID]),
+  broadcaster:send_all(["NEW,", ClientID], #{log => true}),
   {reply, {text, [<<"YOUR_ID,">>, ClientID]}, State}.
 
-websocket_handle({text, Msg}, State = #{id := ClientID}) ->
+websocket_handle({text, Msg}, State = #{id := ClientID, mouseDown := MouseDown}) ->
   NewState = case binary_to_list(Msg) of
     "M_MOV," ++ Coords -> 
-      broadcaster:send_all([<<"M_MOV,">>, ClientID, $,, Coords]),
+      %% Only add events to history if actively drawing, i.e. mouse is depressed
+      broadcaster:send_all([<<"M_MOV,">>, ClientID, $,, Coords], #{log => MouseDown}),
       State#{mouseCoords => Coords};
     "M_UP" ->
-      broadcaster:send_all([<<"M_UP,">>, ClientID]),
+      broadcaster:send_all([<<"M_UP,">>, ClientID], #{log => true}),
       State#{mouseDown => false};
     "M_DOWN" ->
-      broadcaster:send_all([<<"M_DOWN,">>, ClientID]),
+      broadcaster:send_all([<<"M_DOWN,">>, ClientID], #{log => true}),
       State#{mouseDown => true};
     "NAME," ++ Name ->
-      broadcaster:send_all([<<"NAME,">>, ClientID, $,, Name]),
+      broadcaster:send_all([<<"NAME,">>, ClientID, $,, Name], #{log => true}),
       State#{name => Name};
     _Else ->
       io:format("Received OOB text message: ~p~n", Msg),
