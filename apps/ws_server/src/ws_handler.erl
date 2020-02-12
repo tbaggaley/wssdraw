@@ -34,12 +34,11 @@ websocket_handle({text, Msg}, State = #{id := ClientID, mouseDown := MouseDown})
       broadcaster:send_all([<<"NAME,">>, ClientID, $,, Name], #{log => true}),
       State#{name => Name};
     _Else ->
-      io:format("Received OOB text message: ~p~n", Msg),
+      io:format("Received OOB text message: ~p~n", [Msg]),
       State
   end, 
   {ok, NewState};
-websocket_handle(Frame, State) ->
-  io:format("websocket_handle: received oob msg: ~p~n", [Frame]),
+websocket_handle(_Frame, State) ->
   {ok, State}.
 
 websocket_info({send, Msg}, State) ->
