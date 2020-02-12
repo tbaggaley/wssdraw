@@ -49,7 +49,7 @@ function init() {
 
     log("Attempting to connect to server...");
     
-    const sock = new WebSocket("ws://localhost:8080/ws");
+    const sock = new WebSocket("ws://35.246.65.29/ws");
     sock.onopen = () => {
         log("Connected successfully!");
 

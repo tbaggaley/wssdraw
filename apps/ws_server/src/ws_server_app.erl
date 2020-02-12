@@ -20,7 +20,7 @@ routes() -> [
 start(_StartType, _StartArgs) ->
   Routes = cowboy_router:compile(routes()),
   
-  {ok, _} = cowboy:start_clear(httpd, [{port, 8080}], #{env =>
+  {ok, _} = cowboy:start_clear(httpd, [{port, 80}], #{env =>
     #{dispatch => Routes}
   }),
   
