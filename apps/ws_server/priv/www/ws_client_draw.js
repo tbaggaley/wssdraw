@@ -63,7 +63,7 @@ async function init() {
     
     log(`Attempting websocket connection to ${ip}...`);
 
-    const sock = new WebSocket("ws://35.246.65.29/ws");
+    const sock = new WebSocket(`ws://${ip}/ws`);
 
     sock.onopen = () => {
         log("Connected successfully!");
