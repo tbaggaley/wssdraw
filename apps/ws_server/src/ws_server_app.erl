@@ -13,6 +13,7 @@ routes() -> [
  { '_', [
   {"/", cowboy_static, {priv_file, ws_server, "www/index.html"}},
   {"/ws", ws_handler, #{}},
+  {"/ping", ping_handler, #{}},
   {"/[...]", cowboy_static, {priv_dir, ws_server, "www"}}
  ] }
 ].
