@@ -4,9 +4,10 @@
 
 init(_) ->
   register(?MODULE, self()),
-  {ok, #{clients => dict:new(), history => queue:new()}}.
+  {ok, #{clients => dict:new(), history => queue:new(), timer => undefined}}.
 
-handle_call({register, ClientID}, {From, _Tag}, State = #{clients := Clients, history := History}) ->
+handle_call({register, ClientID}, {From, _Tag}, State = #{timer := Timer, clients := Clients, history := History}) ->
+  timer:cancel(Timer),
   NewDict = dict:store(ClientID, From, Clients),
   [From ! {send, Msg} || Msg <- queue:to_list(History)],
   {reply, ok, State#{clients => NewDict}}.
@@ -18,7 +19,14 @@ handle_cast({send_all, Msg, #{log := Logging}}, #{clients := Clients, history :=
                end,
   {noreply, #{clients => Clients, history => NewHistory}};
 handle_cast({deregister, ClientID}, State = #{clients := ClientDict}) ->
-  {noreply, State#{clients => dict:erase(ClientID, ClientDict)}}.
+    NewClients = dict:erase(ClientID, ClientDict),
+    NoClients = dict:size(NewClients),
+    {ok, Timer} = if NoClients =:= 0 ->
+                         timer:apply_after(120000, os, cmd, ["sudo shutdown -hP 0"]);
+                     true ->
+                         {ok, undefined}
+    end,
+    {noreply, State#{clients => NewClients, timer => Timer}}.
 
 %% Public API
 
