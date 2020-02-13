@@ -28,14 +28,43 @@ function log() {
     }
 }
 
-function init() {
+async function sleep(ms) {
+    return new Promise((res, rej) => {
+        setTimeout(res, ms);
+    });
+}
+
+async function init() {
     var playername = "unknown";
 
     document.getElementById("stage").style.display = "none";
 
-    log("Attempting to connect to server...");
+    log("Waking server and receiving IP address...");
+    const res = await fetch("https://europe-west1-wssdraw.cloudfunctions.net/start");
+
+    if(res.status !== 200) {
+        log("Failed to contact cloud platform. Unable to start instance. Try again later.");
+        return
+    }
+
+    const ip = await res.text();
+    log(`Server alive at ${ip}`);
+
+    while(true) {
+        try{
+            log("Waiting for websocket server to become ready...");
+            const ping = await fetch(`http://${ip}`, {mode: "no-cors"});
+            break;
+        } catch {
+            await sleep(2000);
+            continue;
+        }
+    }
     
+    log(`Attempting websocket connection to ${ip}...`);
+
     const sock = new WebSocket("ws://35.246.65.29/ws");
+
     sock.onopen = () => {
         log("Connected successfully!");
 
