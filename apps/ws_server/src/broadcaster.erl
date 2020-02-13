@@ -7,6 +7,7 @@ init(_) ->
   {ok, #{clients => dict:new(), history => queue:new(), timer => undefined}}.
 
 handle_call({register, ClientID}, {From, _Tag}, State = #{timer := Timer, clients := Clients, history := History}) ->
+  io:format("Registering clientID: ~p~n", [ClientID]),
   timer:cancel(Timer),
   NewDict = dict:store(ClientID, From, Clients),
   [From ! {send, Msg} || Msg <- queue:to_list(History)],
