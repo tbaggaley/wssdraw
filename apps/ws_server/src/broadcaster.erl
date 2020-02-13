@@ -13,12 +13,12 @@ handle_call({register, ClientID}, {From, _Tag}, State = #{timer := Timer, client
   [From ! {send, Msg} || Msg <- queue:to_list(History)],
   {reply, ok, State#{clients => NewDict}}.
 
-handle_cast({send_all, Msg, #{log := Logging}}, #{clients := Clients, history := History}) ->
+handle_cast({send_all, Msg, #{log := Logging}}, State = #{clients := Clients, history := History}) ->
   dict:map(fun(_ID, ClientPID) -> ClientPID ! {send, Msg} end, Clients),
   NewHistory = if Logging == true -> queue:snoc(History, Msg);
                   Logging /= true -> History
                end,
-  {noreply, #{clients => Clients, history => NewHistory}};
+  {noreply, State#{clients => Clients, history => NewHistory}};
 handle_cast({deregister, ClientID}, State = #{clients := ClientDict}) ->
     NewClients = dict:erase(ClientID, ClientDict),
     NoClients = dict:size(NewClients),
