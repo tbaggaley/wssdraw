@@ -24,6 +24,7 @@ start(_StartType, _StartArgs) ->
     #{dispatch => Routes}
   }),
   
+  broadcaster:start_link(),
   ws_server_sup:start_link().
 
 stop(_State) ->
