@@ -37,6 +37,9 @@ websocket_handle({text, Msg}, State = #{id := ClientID, mouseDown := MouseDown, 
     "COLOR," ++ Color ->
       broadcaster:send_all([<<"COLOR,">>, ClientID, $,, Color]),
       State;
+    "ALPHA," ++ Alpha ->
+      broadcaster:send_all([<<"ALPHA,">>, ClientID, $,, Alpha]),
+      State;
     "NAME," ++ Name ->
       broadcaster:send_all([<<"NAME,">>, ClientID, $,, Name], #{log => true}),
       State#{name => Name};

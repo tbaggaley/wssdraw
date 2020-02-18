@@ -34,12 +34,19 @@ async function sleep(ms) {
     });
 }
 
+function drawCircle(ctx, x, y, radius) {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI*2);
+    ctx.fill();
+}
+
 async function init() {
     var playername = "unknown";
 
     document.getElementById("stage").style.display = "none";
 
     log("Waking server and receiving IP address...");
+
     const res = await fetch("https://europe-west1-wssdraw.cloudfunctions.net/start");
 
     if(res.status !== 200) {
@@ -84,6 +91,8 @@ async function init() {
 
                 logScrolling = true;
                 sock.send(`NAME,${playername}`);
+                sock.send(`COLOR,${document.getElementById("brushColor").value}`);
+                sock.send(`SIZE,${document.getElementById("brushSize").value}`);
 
                 document.getElementById("stage").style.display = "unset";
             }
@@ -95,10 +104,11 @@ async function init() {
 
     sock.onmessage = ({data}) => { 
         const [type, clientID, ...rest] = data.split(",");
+        const client = clients[clientID];
 
         switch(type) {
             case "NEW":
-                log("Someone is connecting...");
+                console.log("Someone is connecting...");
 
                 clients[clientID] = { 
                     mouse: {
@@ -107,6 +117,7 @@ async function init() {
                     brush: {
                         color: "#000000",
                         thickness: 5
+                        alpha: 1.0
                     },
                     name: "new player"
                 };
@@ -114,46 +125,54 @@ async function init() {
 
             case "M_MOV":
                 const [mouseX, mouseY] = rest;
-                const client = clients[clientID];
 
                 if(client.mouse.down === true) {
-                    ctx.lineWidth = client.brush.thickness;
-                    ctx.strokeStyle = client.brush.color;
+                    ctx.strokeStyle = ctx.fillStyle = client.brush.color;
+                    ctx.lineWidth = client.brush.thickness*2;
+                    ctx.globalAlpha = client.brush.alpha;
+                    drawCircle(ctx, mouseX, mouseY, client.brush.thickness);
                     ctx.beginPath();
                     ctx.moveTo(client.mouse.x, client.mouse.y);
                     ctx.lineTo(mouseX, mouseY);
                     ctx.stroke();
                 }
 
-                clients[clientID].mouse.x = mouseX;
-                clients[clientID].mouse.y = mouseY;
+                client.mouse.x = mouseX;
+                client.mouse.y = mouseY;
                 break;
 
             case "M_DOWN":
-                clients[clientID].mouse.down = true;
+                client.mouse.down = true;
+                ctx.fillStyle = client.brush.color;
+                ctx.globalAlpha = client.brush.alpha;
+                drawCircle(ctx, client.mouse.x, client.mouse.y, client.brush.thickness);
+
                 break;
 
             case "M_UP":
-                clients[clientID].mouse.down = false;
+                client.mouse.down = false;
                 break;
 
             case "COLOR":
-                clients[clientID].brush.color = rest;
+                client.brush.color = rest;
                 break;
 
+            case "ALPHA":
+                client.brush.alpha = parseFloat(rest);
+
             case "SIZE":
-                clients[clientID].brush.thickness = rest;
+                client.brush.thickness = rest;
                 break;
 
             case "DISCONNECT":
-                log(`${clients[clientID].name} disconnected.`);
+                log(`${client.name} disconnected.`);
                 delete clients[clientID];
                 break;
 
             case "NAME":
                 const [newName] = rest;
                 log(`${newName} has joined the session`);
-                clients[clientID].name = newName;
+                client.name = newName;
                 break;
 
             case "YOUR_ID":
@@ -173,19 +192,53 @@ async function init() {
         setTimeout(init, 5000);
     }
 
-    overlay.onmousedown = () => { sock.send("M_DOWN"); };
-    overlay.onmouseup = () => { sock.send("M_UP"); };
-    overlay.onmousemove = ({offsetX, offsetY}) => { sock.send(`M_MOV,${offsetX},${offsetY}`); };
+    overlay.onpointerdown = () => { sock.send("M_DOWN"); };
+    overlay.onpointerup = () => { sock.send("M_UP"); };
+    overlay.onpointermove = ({offsetX, offsetY}) => { sock.send(`M_MOV,${offsetX},${offsetY}`); };
+
+    window.addEventListener("keydown", ({key}) => {
+        const brushSize = document.getElementById("brushSize");
+
+        switch(key) {
+            case "]":
+                brushSize.value++;
+                break;
+            case "[":
+                brushSize.value--;
+                break;
+        }
+
+        brushSize.oninput();
+    });
 
     document.getElementById("brushColor").onchange = function() { 
         sock.send(`COLOR,${this.value}`);
     };
 
-    document.getElementById("brushSize").onchange = function() {
+    document.getElementById("brushSize").oninput = function() {
         sock.send(`SIZE,${this.value}`);
     };
 
+    document.getElementById("brushAlpha").oninput = function() {
+        sock.send(`ALPHA,${this.value}`);
+    }
+
+    document.getElementById("btnDownload").onclick = () =>
+    {
+        const url = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Draw sketch - " + new Date().toUTCString() + ".png";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
     overlayCtx.font = "18px monospace";
+
+    // Prevent timeout
+    setInterval(() => { sock.send("PING"); }, 20000);
+
     drawLoop();
 }
 

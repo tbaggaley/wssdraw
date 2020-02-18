@@ -26,9 +26,18 @@
         </label>
 
         <label for="brushSize">
-            Brush thickness:
+            Thickness:
             <input id="brushSize" type="range" min="1" max="50" value="2">
         </label>
+
+        <label for="brushAlpha">
+            Opacity:
+            <input id="brushAlpha" type="range" min="0.1" max="1.0" value = "1.0">
+        </label>
+
+        <button id="btnDownload">
+            Download your beautiful artwork 
+        </button>
 
         <div id="canvas_stack">
             <canvas id="canvas" width="1200" height="700"> </canvas>
