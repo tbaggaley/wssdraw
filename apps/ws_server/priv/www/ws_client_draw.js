@@ -57,13 +57,17 @@ async function init() {
     const ip = await res.text();
     log(`Server alive at ${ip}`);
 
+    const waitMsg = document.createElement("p");
+    waitMsg.innerText = "Waiting for websocket server to become ready...";
+    log(waitMsg);
+
     while(true) {
         try{
-            log("Waiting for websocket server to become ready...");
             const ping = await fetch(`http://${ip}`, {mode: "no-cors"});
             break;
         } catch {
             await sleep(2000);
+            waitMsg.innerText += ".";
             continue;
         }
     }
@@ -117,7 +121,6 @@ async function init() {
                     brush: {
                         color: "#000000",
                         thickness: 5
-                        alpha: 1.0
                     },
                     name: "new player"
                 };
@@ -129,7 +132,6 @@ async function init() {
                 if(client.mouse.down === true) {
                     ctx.strokeStyle = ctx.fillStyle = client.brush.color;
                     ctx.lineWidth = client.brush.thickness*2;
-                    ctx.globalAlpha = client.brush.alpha;
                     drawCircle(ctx, mouseX, mouseY, client.brush.thickness);
                     ctx.beginPath();
                     ctx.moveTo(client.mouse.x, client.mouse.y);
@@ -144,7 +146,6 @@ async function init() {
             case "M_DOWN":
                 client.mouse.down = true;
                 ctx.fillStyle = client.brush.color;
-                ctx.globalAlpha = client.brush.alpha;
                 drawCircle(ctx, client.mouse.x, client.mouse.y, client.brush.thickness);
 
                 break;
@@ -156,9 +157,6 @@ async function init() {
             case "COLOR":
                 client.brush.color = rest;
                 break;
-
-            case "ALPHA":
-                client.brush.alpha = parseFloat(rest);
 
             case "SIZE":
                 client.brush.thickness = rest;
@@ -218,10 +216,6 @@ async function init() {
     document.getElementById("brushSize").oninput = function() {
         sock.send(`SIZE,${this.value}`);
     };
-
-    document.getElementById("brushAlpha").oninput = function() {
-        sock.send(`ALPHA,${this.value}`);
-    }
 
     document.getElementById("btnDownload").onclick = () =>
     {

@@ -24,8 +24,8 @@ handle_cast({deregister, ClientID}, State = #{clients := ClientDict}) ->
     NoClients = dict:size(NewClients),
     io:format("Clients remaining: ~p~n", [NoClients]),
     {ok, Timer} = if NoClients =:= 0 ->
-                         io:format("Shutdown scheduled for 10seconds unless new clients connect~n"),
-                         timer:apply_after(10000, os, cmd, ["sudo shutdown -hP 0"]);
+                         io:format("Shutdown scheduled for 10 minutes unless new clients connect~n"),
+                         timer:apply_after(600000, os, cmd, ["sudo shutdown -hP 0"]);
                      true ->
                          {ok, undefined}
     end,
